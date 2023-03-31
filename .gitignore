@@ -10,3 +10,4 @@ venv3/
 .pytest_cache
 build/
 *.spec
+executable/vessegen
