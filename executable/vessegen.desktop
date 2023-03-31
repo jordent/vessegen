@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Encoding= UTF-8
-Name= Vessegen
+Name=Vessegen
 Exec=/usr/bin/vessegen
 Icon=/usr/bin/vessegen.png
 StartupNotify=false

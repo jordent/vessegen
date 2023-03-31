@@ -58,4 +58,14 @@ chmod +x ./bin/install
 ./bin/install
 ```
 
-There should now be an executable on the desktop that can be ran.
+There should now be an executable on the desktop that can be ran. Before running, it is reccomended to reboot the system.
+
+## Noteable Raspberry Pi Preferences
+
+You may have noticed that when running the executable on the desktop, you are prompted about what you want to do with it. This is changeable by doing checking the following setting:
+
+*File Manager -> Edit -> Preferences -> General -> Don't ask options on launch executable file*
+
+You also may have want to increase the size of the Desktop Executable. To do so, simply go to the following:
+
+*File Manager -> Edit -> Preferences -> Display -> Size of big icons:*
