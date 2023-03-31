@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cp ./executable/vessegen /usr/bin/vessegen
+cp ./executable/vessegen /usr/bin/vessegen
+cp ./executable/vessegen.desktop /home/desktop/

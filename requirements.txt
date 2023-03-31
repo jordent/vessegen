@@ -1,0 +1,6 @@
+altgraph==0.17.3
+humanize==4.6.0
+pyinstaller==5.9.0
+pyinstaller-hooks-contrib==2023.1
+PySimpleGUI==4.60.4
+RPi.GPIO==0.7.1

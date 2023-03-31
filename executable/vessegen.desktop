@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Encoding= UTF-8
+Name= Vessegen
+Exec=/usr/bin/vessegen/vessegen
+Icon=/usr/bin/vessegen/vessegen.png
+StartupNotify=false
+Terminal=false
