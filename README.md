@@ -66,6 +66,10 @@ You may have noticed that when running the executable on the desktop, you are pr
 
 *File Manager -> Edit -> Preferences -> General -> Don't ask options on launch executable file*
 
+For a touch screen display, it is recommended to set the executable to run on a single click. To do this, simply do the following:
+
+*File Manager -> Edit -> Preferences -> General -> Open files with single click*
+
 You also may have want to increase the size of the Desktop Executable. To do so, simply go to the following:
 
 *File Manager -> Edit -> Preferences -> Display -> Size of big icons:*
