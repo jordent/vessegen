@@ -2,9 +2,56 @@
 
 Vessegen Software is a Python Package to control a custom made bioreactor. It was designed to run off of a Raspberry Pi. Thus, this software will likely not be useful anywhere else or to anyone except for the lab it was designed for.
 
+## Installation
+
+To start installation, first clone the git repo.
+
+```bash
+sudo apt-get install git
+git clone https://github.com/jordent/vessegen.git
+cd ./vessegen
+```
+
+Now, create a virtual environment to install the dependencies, making sure we have Python.
+
+```bash
+sudo apt-get update
+sudo apt-get install python3 python3-pip python3-venv python3-wheel python3-setuptools
+python3 -m venv env
+source env/bin/activate
+```
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install the dependencies.
+
+```bash
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```
+Then you can install the Vessegen Software.
+
+```bash
+pip install .
+```
+And then run Vessegen.
+
+```bash
+vessegen
+```
+When you are done, be sure to deactive the virtual environment
+```bash
+deactivate
+```
 ## Create a Desktop Executable
 
-The easiest way to use this software is to setup the Raspberry Pi to use the executables and .desktop files that come with the distribution. To do that, execute the following code.
+The easiest way to use this software is to setup the Raspberry Pi to have an executable shorcut on the desktop. To do that, first start with the installation above and ensure that dependencies have been installed. Then, create the executable using PyInstaller.
+
+```bash
+source env/bin/activate
+pyinstaller --onefile --windowed --name=vessegen --distpath=./executable --clean vessegen/__main__.py
+deactivate
+```
+
+Now run the install script to put the executable into the correct place and create the shortcut on the desktop.
 
 ```bash
 chmod +x ./bin/install
@@ -12,70 +59,3 @@ chmod +x ./bin/install
 ```
 
 There should now be an executable on the desktop that can be ran.
-
-## Manual Installation
-
-If you would like to install the Python package and call from the command line, use the package manager [pip](https://pip.pypa.io/en/stable/) to install the dependencies.
-
-```bash
-pip install -r requirements.txt
-```
-Then you can install the Vessegen Software.
-
-```bash
-pip install vessegen
-```
-And then run Vessegen.
-
-```bash
-vessegen
-```
-It is recommended that these installations occur inside of a Python virtual environment. The recommended sequence of commands is the following.
-
-```bash
-python3 -m venv env
-source env/bin/activate
-pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
-pip install vessegen
-vessegen
-...
-deactivate
-```
-Note that if installed inside of a virtual environment
-
-```bash
-source env/bin/activate
-```
-will need to get called in the correct directory any time you want
-
-```bash
-vessegen
-```
-to work. Thus, in this instance, it may not be necessary to use the virtual environment.
-
-## Updating the Code
-
-It is not recommended to update the code unless care is taken to not do something that will burn out the Raspberry Pi. Any incorrect code or bugs that result in something happening to the GPIO pins could result in the burning of your Raspberry Pi. Thus, proceed with caution.
-
-If you would like to edit the code, you will need to repackage the software. Ensure all dependencies have been installed, including any packages you may be adding.
-
-```bash
-pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
-```
-Now, you can install the Vessegen package in editable mode so that the package will automatically update any time you save the code. Make sure you are in the directory with the **pyproject.toml**.
-
-```bash
-pip install -e .
-```
-
-In order to update the executable, you need to use **PyInstaller**
-```bash
-pyinstaller --onefile --windowed --name=vessegen --distpath=./executable --clean vessegen/__main__.py
-```
-and then rerun the install script.
-
-```bash
-./bin/install
-```
