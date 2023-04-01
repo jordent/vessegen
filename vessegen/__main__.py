@@ -242,7 +242,7 @@ def get_monitoring_window(chambers, start_time):
         [sg.Text(text = "System Status and Control", font='Roboto 30', pad=(0,5))],
         chamber_frames,
         [led_spot, sg.Text(text = "System running for: " + humanize.naturaldelta(datetime.datetime.now() - start_time), font='Roboto 18', pad=(0,5), key='-RUNTIME-')],
-        [sg.Button("Add Media to All Reservoirs", font='Roboto 15', pad=(5,5)), sg.Button("Change Media in All Reservoirs", font='Roboto 15', pad=(5,5)), sg.Button("Finish", font='Roboto 15', pad=(5,5))]
+        [sg.Button("Add Media to All Reservoirs", font='Roboto 15', pad=(5,5)), sg.Button("Change Media in All Chambers", font='Roboto 15', pad=(5,5)), sg.Button("Finish", font='Roboto 15', pad=(5,5))]
     ]
 
     # Initialize the window
@@ -273,7 +273,7 @@ def get_monitoring_window(chambers, start_time):
         
         # If the user has selected Change Media in All Reservoirs, then start changing
         # the media in all of the chambers
-        elif event == 'Change Media in All Reservoirs':
+        elif event == 'Change Media in All Chambers':
             for i in range(8):
                 if chambers[i]['is_in_use']:
                     update_monitor(window, chambers, start_time)
