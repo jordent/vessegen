@@ -4,7 +4,44 @@ import humanize
 import datetime
 import time
 import threading
-# import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
+
+# Create a list of dictionaries to keep track of which GPIO pins are for which
+# chamber
+GPIO_PINS = [
+    {
+        "add": 3,
+        "remove": 5
+    },
+    {
+        "add": 7,
+        "remove": 8
+    },
+    {
+        "add": 10,
+        "remove": 12
+    },
+    {
+        "add": 11,
+        "remove": 13
+    },
+    {
+        "add": 18,
+        "remove": 19
+    },
+    {
+        "add": 21,
+        "remove": 22
+    },
+    {
+        "add": 23,
+        "remove": 24
+    },
+    {
+        "add": 31,
+        "remove": 32
+    }
+]
 
 def main():
     """Top level function."""
@@ -25,12 +62,18 @@ def main():
     get_user_settings(chambers, shutdown)
 
     # Load the monitoring window if the user didn't cancel
-    start_time = datetime.datetime.now()
-    for i in range(8):
-        chambers[i]["last_changed"] = datetime.datetime.now()
     if not shutdown["settings"]:
-        shutdown["update"] = False
-        get_monitoring_window(chambers, start_time, shutdown)
+        # Set up the GPIO pins
+        GPIO.setmode(GPIO.BOARD)
+        for chamber in GPIO_PINS:
+            GPIO.setup(chamber["add"], GPIO.OUT)
+            GPIO.setup(chamber["remove"], GPIO.OUT)
+
+        # Define a new start time and make the chambers time accurate
+        start_time = datetime.datetime.now()
+        for i in range(8):
+            chambers[i]["last_changed"] = datetime.datetime.now()
+        get_monitoring_window(chambers, start_time)
 
 def get_user_settings(chambers, shutdown):
     """Get the user input in a graphical format."""
@@ -147,7 +190,7 @@ def get_user_settings(chambers, shutdown):
     
     window.close()
 
-def get_monitoring_window(chambers, start_time, shutdown):
+def get_monitoring_window(chambers, start_time):
     """Display information for the chambers and allow user control."""
     # Set the font and the theme of the GUI
     default_font = 'Roboto 12'
@@ -221,7 +264,6 @@ def get_monitoring_window(chambers, start_time, shutdown):
         # If the user has selected "Cancel" or closed the window, then exit the
         # program
         if event in ('Cancel', 'Finish', None, sg.WIN_CLOSED):
-            shutdown["update"] = True
             break   
         
         # If the user has selected Add Media to All Reservoirs, then add the media
@@ -339,21 +381,30 @@ def change_media_in_single_reservoir(window, chambers, chamber_id):
 
         popup_window.close()
     else:
+        # Inform the user that we are removing media
         chambers[chamber_id]["status"] = "Removing media..."
         window["-CHAMBER" + str(chamber_id + 1) + "-STATUS-"].update("Status: " + chambers[chamber_id]["status"])
         window.refresh()
 
         # Send the signal to remove the media and wait
+        GPIO.output(GPIO_PINS[chamber_id]["remove"], GPIO.HIGH)
         time.sleep(10)
+        GPIO.output(GPIO_PINS[chamber_id]["remove"], GPIO.LOW)
+        time.sleep(0.1)
 
+        # Inform the user that we are adding media
         chambers[chamber_id]["status"] = "Adding media..."
         window["-CHAMBER" + str(chamber_id + 1) + "-STATUS-"].update("Status: " + chambers[chamber_id]["status"])
         window.refresh()
 
         # Calculate the time it will take to add the media, send the signal, and wait
+        GPIO.output(GPIO_PINS[chamber_id]["add"], GPIO.HIGH)
         time_to_add_media = 10
         time.sleep(time_to_add_media)
+        GPIO.output(GPIO_PINS[chamber_id]["add"], GPIO.LOW)
+        time.sleep(0.1)
 
+        # Inform the user that we are running, decrement the media removed
         chambers[chamber_id]["status"] = "Running"
         chambers[chamber_id]["last_changed"] = datetime.datetime.now()
         chambers[chamber_id]["media_in_chamber"] -= 30
