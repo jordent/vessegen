@@ -388,7 +388,7 @@ def change_media_in_single_reservoir(window, chambers, chamber_id):
 
         # Send the signal to remove the media and wait
         GPIO.output(GPIO_PINS[chamber_id]["remove"], GPIO.HIGH)
-        time.sleep(10)
+        time.sleep(5)
         GPIO.output(GPIO_PINS[chamber_id]["remove"], GPIO.LOW)
         time.sleep(0.1)
 
@@ -399,7 +399,7 @@ def change_media_in_single_reservoir(window, chambers, chamber_id):
 
         # Calculate the time it will take to add the media, send the signal, and wait
         GPIO.output(GPIO_PINS[chamber_id]["add"], GPIO.HIGH)
-        time_to_add_media = 10
+        time_to_add_media = 5
         time.sleep(time_to_add_media)
         GPIO.output(GPIO_PINS[chamber_id]["add"], GPIO.LOW)
         time.sleep(0.1)
