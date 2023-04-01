@@ -73,3 +73,24 @@ For a touch screen display, it is recommended to set the executable to run on a 
 You also may have want to increase the size of the Desktop Executable. To do so, simply go to the following:
 
 *File Manager -> Edit -> Preferences -> Display -> Size of big icons:*
+
+## Getting an Update
+
+You can always check for an update by using git.
+
+```bash
+git fetch
+git status
+git pull
+```
+
+If an update pulls, reinstall.
+
+```bash
+source env/bin/activate
+pip install .
+pyinstaller --onefile --windowed --name=vessegen --distpath=./executable --clean vessegen/__main__.py
+chmod +x ./bin/install
+./bin/install
+deactivate
+```
