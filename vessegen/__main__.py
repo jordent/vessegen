@@ -108,7 +108,7 @@ def get_user_settings():
     sg.theme('LightGray1')
 
     # Define the layout of the starting window
-    start_layout = [[sg.Text(text = "Hello from Vessegen TESTING TWO!", font='Roboto 40', text_color='red', pad=((0,0), (120, 20)))],
+    start_layout = [[sg.Text(text = "Hello from Vessegen!", font='Roboto 40', text_color='red', pad=((0,0), (120, 20)))],
                     [sg.Text(text = "Select 'Get Started' below to begin.", font=default_font, pad=(0,10))],
                     [sg.Button("Get Started", font=default_font), sg.Button("Close", font=default_font)]]
     
