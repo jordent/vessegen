@@ -1,5 +1,5 @@
 #!/bin/bash
 
-source /env/bin/bash
+source /env/bin/activate
 vessegen
 deactivate
