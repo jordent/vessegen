@@ -6,6 +6,8 @@ import time
 import threading
 import RPi.GPIO as GPIO
 
+GPIO.setwarnings(False)
+
 # Create a list of dictionaries to keep track of which GPIO pins are for which
 # chamber
 GPIO_PINS = [
