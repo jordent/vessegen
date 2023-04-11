@@ -1,5 +1,0 @@
-#!/bin/bash
-
-sudo cp ./executable/vessegen /usr/bin/vessegen
-sudo cp ./executable/vessegen.png /usr/bin/vessegen.png
-sudo cp ./executable/vessegen.desktop /home/pi/Desktop/

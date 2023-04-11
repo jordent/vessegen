@@ -43,39 +43,63 @@ GPIO_PINS = [
     }
 ]
 
+# Set up the GPIO pins
+GPIO.setmode(GPIO.BOARD)
+for chamber in GPIO_PINS:
+    GPIO.setup(chamber["add"], GPIO.OUT)
+    GPIO.setup(chamber["remove"], GPIO.OUT)
+
+# Initialize a structure to keep track of chambers
+chambers = []
+for i in range(8):
+    chambers.append({
+        "chamber_id": i + 1,
+        "is_in_use": False,
+        "last_changed": None,
+        "media_in_chamber": 0,
+        "status": "Unused"
+    })
+
+# Initialize a shutdown dictionary to control shutdown if desired
+shutdown = {
+    "main": False,
+    "settings": False
+}
+
+def reset_chambers():
+    """Reset the chambers if requested."""
+    for chamber in chambers:
+        chamber["is_in_use"] = False
+        chamber["last_changed"] = None
+        chamber["media_in_chamber"] = 0
+        chamber["status"] = "Unused"
+
+
 def main():
     """Top level function."""
-    # Initialize some variables that are going to keep track of state
-    chambers = []
-    for i in range(8):
-        chambers.append({
-            "chamber_id": i + 1,
-            "is_in_use": False,
-            "last_changed": datetime.datetime.now(),
-            "media_in_chamber": 0,
-            "status": "Unused"
-        })
-    shutdown = {}
-    shutdown["settings"] = False
+    while not shutdown['main']:
+        # Reset the chambers
+        reset_chambers()
 
-    # Load the GUI that can input the user settings
-    get_user_settings(chambers, shutdown)
+        # Reset shutdown variable
+        shutdown['settings'] = False
 
-    # Load the monitoring window if the user didn't cancel
-    if not shutdown["settings"]:
-        # Set up the GPIO pins
-        GPIO.setmode(GPIO.BOARD)
-        for chamber in GPIO_PINS:
-            GPIO.setup(chamber["add"], GPIO.OUT)
-            GPIO.setup(chamber["remove"], GPIO.OUT)
+        # Load the GUI that can input the user settings
+        get_user_settings()
+
+        # If the user cancels, pass the current iteration
+        if shutdown["settings"]:
+            continue
 
         # Define a new start time and make the chambers time accurate
         start_time = datetime.datetime.now()
         for i in range(8):
             chambers[i]["last_changed"] = datetime.datetime.now()
-        get_monitoring_window(chambers, start_time)
 
-def get_user_settings(chambers, shutdown):
+        # Get the monitoring window
+        start_monitoring_window(start_time)
+
+def get_user_settings():
     """Get the user input in a graphical format."""
     # Set the font and the theme of the GUI
     default_font = 'Roboto 20'
@@ -84,7 +108,7 @@ def get_user_settings(chambers, shutdown):
     # Define the layout of the starting window
     start_layout = [[sg.Text(text = "Hello from Vessegen!", font='Roboto 40', text_color='red', pad=((0,0), (120, 20)))],
                     [sg.Text(text = "Select 'Get Started' below to begin.", font=default_font, pad=(0,10))],
-                    [sg.Button("Get Started", font=default_font), sg.Cancel(font=default_font)]]
+                    [sg.Button("Get Started", font=default_font), sg.Button("Close", font=default_font)]]
     
     # Define the layout to allow the user to select the chambers that will be in
     # use
@@ -122,7 +146,7 @@ def get_user_settings(chambers, shutdown):
                sg.Column(same_settings_media, visible=False, key='-SAMESETTINGSMEDIA-', element_justification='center')]]
     
     # Initialize the window
-    window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', size=(1024,600))
+    window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', size=(1024,595))
     
     # Start in the starting window column
     current_layout = '-STARTCOL-'
@@ -134,10 +158,14 @@ def get_user_settings(chambers, shutdown):
 
         # If the user has selected "Cancel" or closed the window, then exit the
         # program
-        if event in ('Cancel', 'Cancel1', 'Cancel2', 'Cancel3', None, sg.WIN_CLOSED):
+        if event in ('Cancel1', 'Cancel2', 'Cancel3'):
             shutdown["settings"] = True
             break
-        
+        elif event in ('Close', None, sg.WIN_CLOSED):
+            shutdown["main"] = True
+            shutdown["settings"] = True
+            break
+
         # If the user has selected Get Started, then take them to where they can
         # select the chambers
         elif event == 'Get Started':
@@ -190,7 +218,7 @@ def get_user_settings(chambers, shutdown):
     
     window.close()
 
-def get_monitoring_window(chambers, start_time):
+def start_monitoring_window(start_time):
     """Display information for the chambers and allow user control."""
     # Set the font and the theme of the GUI
     default_font = 'Roboto 12'
@@ -246,7 +274,7 @@ def get_monitoring_window(chambers, start_time):
     ]
 
     # Initialize the window
-    window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', size=(1024,600), finalize=True)
+    window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', size=(1024,595), finalize=True)
 
     # Draw the LED
     led = led_spot.draw_circle((10,10), 9, fill_color='white', line_color="black", line_width=1)
@@ -259,7 +287,7 @@ def get_monitoring_window(chambers, start_time):
         # Update the monitor
         led_color = "green" if led_color == "white" else "white"
         window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
-        update_monitor(window, chambers, start_time)
+        update_monitor(window, start_time)
 
         # If the user has selected "Cancel" or closed the window, then exit the
         # program
@@ -269,99 +297,222 @@ def get_monitoring_window(chambers, start_time):
         # If the user has selected Add Media to All Reservoirs, then add the media
         # specified by the user to all of the chambers
         elif event == 'Add Media to All Reservoirs':
-            add_media_to_all_reservoirs(chambers)      
+            add_media_to_all_reservoirs(led, led_color, window, start_time)      
         
         # If the user has selected Change Media in All Reservoirs, then start changing
         # the media in all of the chambers
         elif event == 'Change Media in All Chambers':
             for i in range(8):
                 if chambers[i]['is_in_use']:
-                    update_monitor(window, chambers, start_time)
-                    change_media_in_single_reservoir(window, chambers, i)
+                    change_media_in_single_reservoir(led, led_color, start_time, window, i)
 
         elif event in [f"-CHAMBER{i}-ADDMEDIA-" for i in range(1, 9)]:
-            add_media_to_single_reservoir(chambers, int(event[8]) - 1)
+            add_media_to_single_reservoir(int(event[8]) - 1, led, led_color, window, start_time)
 
         elif event in [f"-CHAMBER{i}-CHANGEMEDIA-" for i in range(1, 9)]:
-            change_media_in_single_reservoir(window, chambers, int(event[8]) - 1)
+            change_media_in_single_reservoir(led, led_color, start_time, window, int(event[8]) - 1)
 
     window.close()
 
-def update_monitor(window, chambers, start_time):
+def update_monitor(window, start_time):
     """Update the window with information from the chambers."""
     # Update the stuff
     window['-RUNTIME-'].update("System running for: " + humanize.naturaldelta(datetime.datetime.now() - start_time))
     for i in range(8):
         if chambers[i]['is_in_use']:
             window['-CHAMBER' + str(chambers[i]['chamber_id']) + '-LASTCHANGE-'].update("Last Change: " + humanize.naturaltime(datetime.datetime.now() - chambers[i]["last_changed"]))
-            window['-CHAMBER' + str(chambers[i]['chamber_id']) + '-MEDIARES-'].update("Media in Reservoir: " + str(chambers[i]["media_in_chamber"]) + " mL")
+            window['-CHAMBER' + str(chambers[i]['chamber_id']) + '-MEDIARES-'].update("Media in Reservoir: " + str(round(chambers[i]["media_in_chamber"], 1)) + " mL")
     window.refresh()
 
-def add_media_to_single_reservoir(chambers, chamber_id):
+def add_media_to_single_reservoir(chamber_id, led, led_color, window, start_time):
     """Add the media specified by the user to the specified chamber."""
     layout = [
         [sg.Text(text = "How much media did you add to Chamber " + str(chamber_id + 1) + "?", font='Roboto 20', pad=(0,20))],
-        [sg.InputText(size=(3,2), font='Roboto 20', default_text='', key="-MEDIAVAL-"), sg.Text(text = "mL", font='Roboto 20')],
-        [sg.Button("Submit", font='Roboto 15', pad=(5,20)), sg.Button("Clear Media", font='Roboto 15', pad=(5,20)), sg.Cancel(font='Roboto 15', pad=(5,20))],
+        [sg.Text(text="0", key="-MEDIAVAL-", font='Roboto 20', pad=(0,20)), sg.Text(text = " mL", font='Roboto 20', pad=(0,20))],
+        [sg.Button("-0.1", font='Roboto 15', pad=(5,5)), sg.Button("+0.1", font='Roboto 15', pad=(5,5))],
+        [sg.Button("-1", font='Roboto 15', pad=(5,5)), sg.Button("+1", font='Roboto 15', pad=(5,5))],
+        [sg.Button("-5", font='Roboto 15', pad=(5,5)), sg.Button("+5", font='Roboto 15', pad=(5,5))],
+        [sg.Button("-10", font='Roboto 15', pad=(5,5)), sg.Button("+10", font='Roboto 15', pad=(5,5))],
+        [sg.Button("Set to Zero", font='Roboto 15', pad=(5,20)), sg.Button("Empty Resevoir", font='Roboto 15', pad=(5,20)), sg.Button("Submit", font='Roboto 15', pad=(5,20)), sg.Cancel(font='Roboto 15', pad=(5,20))],
         [sg.Text(text = "Note: include any volume of extra additives added to the media.", font='Roboto 10', pad=(0,20))]
     ]
-    popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center')
+    popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', finalize=True)
 
-    # Read the user input from the GUI
-    event, values = popup_window.read(timeout=100000)
+    media_to_add = 0
+    while True:
+        if media_to_add == 0:
+            media_to_add = round(media_to_add, 0)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
 
-    # If the user has selected "Cancel" or closed the window, then exit the
-    # program
-    if event in ('Cancel', 'Finish', None, sg.WIN_CLOSED):
-        pass
-    
-    # If the user has selected Add Media to All Reservoirs, then add the media
-    # specified by the user to all of the chambers
-    elif event == 'Submit':
-        # Get the user input and update the chamber information
-        if values["-MEDIAVAL-"] != "":
-            chambers[chamber_id]['media_in_chamber'] += int(values["-MEDIAVAL-"])
+        # Read the user input from the GUI
+        event, values = popup_window.read(timeout=1000)
 
-    elif event == 'Clear Media':
-        chambers[chamber_id]['media_in_chamber'] = 0
+        # Update the monitor
+        led_color = "green" if led_color == "white" else "white"
+        window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
+        update_monitor(window, start_time)
+
+        # If the user has selected "Cancel" or closed the window, then exit the
+        # program
+        if event in ('Cancel', 'Finish', None, sg.WIN_CLOSED):
+            break
+
+        elif event == '-0.1':
+            media_to_add = round(media_to_add - 0.1, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '+0.1':
+            media_to_add = round(media_to_add + 0.1, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '-1':
+            media_to_add = round(media_to_add - 1, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '+1':
+            media_to_add = round(media_to_add + 1, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '-5':
+            media_to_add = round(media_to_add - 5, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '+5':
+            media_to_add = round(media_to_add + 5, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '-10':
+            media_to_add = round(media_to_add - 10, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '+10':
+            media_to_add = round(media_to_add + 10, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+        
+        # If the user has selected Add Media to All Reservoirs, then add the media
+        # specified by the user to all of the chambers
+        elif event == 'Submit':
+            # Get the user input and update the chamber information
+            chambers[chamber_id]['media_in_chamber'] += media_to_add
+            break
+
+        elif event == 'Set to Zero':
+            media_to_add = 0
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == 'Empty Resevoir':
+            chambers[chamber_id]['media_in_chamber'] = 0
+            break
 
     popup_window.close()
 
-def add_media_to_all_reservoirs(chambers):
+def add_media_to_all_reservoirs(led, led_color, window, start_time):
     """Add the media specified by the user to all chambers."""
     layout = [
         [sg.Text(text = "How much media did you add to all the Chambers?", font='Roboto 20', pad=(0,20))],
-        [sg.InputText(size=(3,2), font='Roboto 20', default_text='', key="-MEDIAVAL-"), sg.Text(text = "mL", font='Roboto 20')],
-        [sg.Button("Submit", font='Roboto 15', pad=(5,20)), sg.Button("Clear Media", font='Roboto 15', pad=(5,20)), sg.Cancel(font='Roboto 15', pad=(5,20))],
+        [sg.Text(text="0", key="-MEDIAVAL-", font='Roboto 20', pad=(0,20)), sg.Text(text = " mL", font='Roboto 20', pad=(0,20))],
+        [sg.Button("-0.1", font='Roboto 15', pad=(5,5)), sg.Button("+0.1", font='Roboto 15', pad=(5,5))],
+        [sg.Button("-1", font='Roboto 15', pad=(5,5)), sg.Button("+1", font='Roboto 15', pad=(5,5))],
+        [sg.Button("-5", font='Roboto 15', pad=(5,5)), sg.Button("+5", font='Roboto 15', pad=(5,5))],
+        [sg.Button("-10", font='Roboto 15', pad=(5,5)), sg.Button("+10", font='Roboto 15', pad=(5,5))],
+        [sg.Button("Set to Zero", font='Roboto 15', pad=(5,20)), sg.Button("Empty Resevoir", font='Roboto 15', pad=(5,20)), sg.Button("Submit", font='Roboto 15', pad=(5,20)), sg.Cancel(font='Roboto 15', pad=(5,20))],
         [sg.Text(text = "Note: include any volume of extra additives added to the media.", font='Roboto 10', pad=(0,20))]
     ]
-    popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center')
+    popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', finalize=True)
 
-    # Read the user input from the GUI
-    event, values = popup_window.read(timeout=100000)
+    media_to_add = 0
+    while True:
+        if media_to_add == 0:
+            media_to_add = round(media_to_add, 0)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
 
-    # If the user has selected "Cancel" or closed the window, then exit the
-    # program
-    if event in ('Cancel', 'Finish', None, sg.WIN_CLOSED):
-        pass
-    
-    # If the user has selected Add Media to All Reservoirs, then add the media
-    # specified by the user to all of the chambers
-    elif event == 'Submit':
-        # Get the user input and update the chamber information
-        if values["-MEDIAVAL-"]!= "":
-            for i in range(8):
-                if chambers[i]['is_in_use']:
-                    chambers[i]['media_in_chamber'] += int(values["-MEDIAVAL-"])
+        # Read the user input from the GUI
+        event, values = popup_window.read(timeout=1000)
 
-    elif event == 'Clear Media':
-        for i in range(8):
-            if chambers[i]['is_in_use']:
-                chambers[i]['media_in_chamber'] = 0
+        # Update the monitor
+        led_color = "green" if led_color == "white" else "white"
+        window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
+        update_monitor(window, start_time)
+
+        # If the user has selected "Cancel" or closed the window, then exit the
+        # program
+        if event in ('Cancel', 'Finish', None, sg.WIN_CLOSED):
+            break
+
+        elif event == '-0.1':
+            media_to_add = round(media_to_add - 0.1, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '+0.1':
+            media_to_add = round(media_to_add + 0.1, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '-1':
+            media_to_add = round(media_to_add - 1, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '+1':
+            media_to_add = round(media_to_add + 1, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '-5':
+            media_to_add = round(media_to_add - 5, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '+5':
+            media_to_add = round(media_to_add + 5, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '-10':
+            media_to_add = round(media_to_add - 10, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == '+10':
+            media_to_add = round(media_to_add + 10, 1)
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+        
+        # If the user has selected Add Media to All Reservoirs, then add the media
+        # specified by the user to all of the chambers
+        elif event == 'Submit':
+            # Get the user input and update the chamber information
+            for chamber_id in range(8):
+                if chambers[chamber_id]['status'] != 'Unused':
+                    chambers[chamber_id]['media_in_chamber'] += round(media_to_add, 1)
+            break
+
+        elif event == 'Set to Zero':
+            media_to_add = 0
+            popup_window['-MEDIAVAL-'].update(str(media_to_add))
+            popup_window.refresh()
+
+        elif event == 'Empty Resevoir':
+            for chamber_id in range(8):
+                if chambers[chamber_id]['status'] != 'Unused':
+                    chambers[chamber_id]['media_in_chamber'] = 0
+            break
 
     popup_window.close()
 
-def change_media_in_single_reservoir(window, chambers, chamber_id):
+def change_media_in_single_reservoir(led, led_color, start_time, window, chamber_id):
     """Change the media in the specified chamber."""
     if chambers[chamber_id]["media_in_chamber"] < 30:
         layout = [
@@ -369,17 +520,23 @@ def change_media_in_single_reservoir(window, chambers, chamber_id):
             [sg.Text(text = "Note: if there is enough media, make sure the value recorded is accurate.", font='Roboto 15', pad=(0,20))],
             [sg.Button("OK", font='Roboto 15', pad=(5,20))]
         ]
-        popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center')
+        popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', finalize=True)
 
-        # Read the user input from the GUI
-        event, values = popup_window.read(timeout=10000)
+        while True:
+            # Read the user input from the GUI
+            event, values = popup_window.read(timeout=1000)
 
-        # If the user has selected "Cancel" or closed the window, then exit the
-        # program
-        if event in ('Cancel', 'Finish', None, 'OK', sg.WIN_CLOSED):
-            pass
+            # Update the monitor
+            led_color = "green" if led_color == "white" else "white"
+            window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
+            update_monitor(window, start_time)
 
-        popup_window.close()
+            # If the user has selected "Cancel" or closed the window, then exit the
+            # program
+            if event in ('Cancel', 'Finish', None, 'OK', sg.WIN_CLOSED):
+                pass
+
+            popup_window.close()
     else:
         # Inform the user that we are removing media
         chambers[chamber_id]["status"] = "Removing media..."
@@ -387,8 +544,15 @@ def change_media_in_single_reservoir(window, chambers, chamber_id):
         window.refresh()
 
         # Send the signal to remove the media and wait
+        time_to_remove_media = 5
         GPIO.output(GPIO_PINS[chamber_id]["remove"], GPIO.HIGH)
-        time.sleep(5)
+        
+        for _ in range(int(time_to_remove_media)):
+            led_color = "green" if led_color == "white" else "white"
+            window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
+            update_monitor(window, start_time)
+            time.sleep(1)
+        
         GPIO.output(GPIO_PINS[chamber_id]["remove"], GPIO.LOW)
         time.sleep(0.1)
 
@@ -398,16 +562,22 @@ def change_media_in_single_reservoir(window, chambers, chamber_id):
         window.refresh()
 
         # Calculate the time it will take to add the media, send the signal, and wait
-        GPIO.output(GPIO_PINS[chamber_id]["add"], GPIO.HIGH)
         time_to_add_media = 5
-        time.sleep(time_to_add_media)
+        GPIO.output(GPIO_PINS[chamber_id]["add"], GPIO.HIGH)
+        
+        for _ in range(int(time_to_add_media)):
+            led_color = "green" if led_color == "white" else "white"
+            window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
+            update_monitor(window, start_time)
+            time.sleep(1)
+        
         GPIO.output(GPIO_PINS[chamber_id]["add"], GPIO.LOW)
         time.sleep(0.1)
 
         # Inform the user that we are running, decrement the media removed
         chambers[chamber_id]["status"] = "Running"
         chambers[chamber_id]["last_changed"] = datetime.datetime.now()
-        chambers[chamber_id]["media_in_chamber"] -= 30
+        chambers[chamber_id]["media_in_chamber"] = round(chambers[chamber_id]["media_in_chamber"] - 30, 1)
         window["-CHAMBER" + str(chamber_id + 1) + "-STATUS-"].update("Status: " + chambers[chamber_id]["status"])
         window.refresh()
 
