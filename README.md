@@ -50,6 +50,12 @@ You can always check for an update by using git. To make this easier and more st
 ./bin/update-vessegen.sh
 ```
 
+By default, the script will only update the local installation of Vessegen Software. To update the desktop installation as well, run the update script with a "desktop" argument.
+
+```bash
+./bin/update-vessegen.sh desktop
+```
+
 ## **Notable Raspberry Pi Preferences**
 If using a 7 inch LCD touch screen like we did, the first thing you should do is comfirm that the OS is set to a medium screen size. To do that, do the following:
 
