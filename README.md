@@ -4,7 +4,7 @@ Vessegen Software is a Python Package to control a custom-made bioreactor. It wa
 
 ## **Requirements**
 
-This tutorial assumes you are using a Raspberry Pi with the most up to date Raspbian OS. At the time of writing, we were using a Raspberry Pi 3B running Raspian GNU/Linux 11 (Bullseye). If you need help installing the Raspbian OS, check out [here](https://www.raspberrypi.com/software/).
+This tutorial assumes you are using a Raspberry Pi with the most up to date Raspbian OS. At the time of writing, we were using a Raspberry Pi 3B running Raspian GNU/Linux 11 (Bullseye). If you need help installing the Raspbian OS, check out the tutorial provided [here](https://www.raspberrypi.com/software/).
 
 ## **Installation**
 
