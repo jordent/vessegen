@@ -9,7 +9,7 @@ else
     status=($(git status | grep "branch is behind"))
     if [[ "$status" ]]; then
         echo "Updates found, installing updates..."
-        git pull
+        git pull --rebase
         sudo chmod +x ./bin/*
         ./bin/install-vessegen.sh
         if [[ $1 == "desktop" ]]; then

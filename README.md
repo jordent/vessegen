@@ -56,6 +56,8 @@ By default, the script will only update the local installation of Vessegen Softw
 ./bin/update-vessegen.sh desktop
 ```
 
+Note: If you have made edits to the code, updates will not pull. You will either need to stash your changes or restore the files prior to getting the update.
+
 ## **Notable Raspberry Pi Preferences**
 If using a 7 inch LCD touch screen like we did, the first thing you should do is comfirm that the OS is set to a medium screen size. To do that, do the following:
 
