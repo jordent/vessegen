@@ -2,6 +2,8 @@
 
 if [[ $2 ]]; then
     echo "Too many arguments provided!"
+elif [[ $1 && $1 != "desktop" ]]; then
+    echo "Unknown argument: "$1
 else
     git fetch
     status=($(git status | grep "branch is behind"))
