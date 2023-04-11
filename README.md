@@ -1,6 +1,6 @@
 # **Vessegen Software**
 
-Vessegen Software is a Python Package to control a custom-made bioreactor. It was designed to run off of a Raspberry Pi. Thus, this software will likely not be useful anywhere else or to anyone except for the lab it was designed for.
+Vessegen Software is a Python Package to control a custom-made bioreactor. It was designed to run off of a Raspberry Pi with a 7 inch touch screen display. Thus, this software will likely not be useful anywhere else or to anyone except for the lab it was designed for.
 
 ## **Requirements**
 
