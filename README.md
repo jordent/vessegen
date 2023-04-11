@@ -44,19 +44,10 @@ After reboot, there should now be an executable on the desktop that can be run.
 
 ## Getting an Update
 
-You can always check for an update by using git.
+You can always check for an update by using git. To make this easier and more streamlined, we have provided an update script.
 
 ```bash
-cd ./vessegen # Navigate to your vessegen folder
-git fetch
-git status
-git pull
-```
-
-If an update pulls, reinstall.
-
-```bash
-./bin/install-vesegen.sh
+./bin/update-vessegen.sh
 ```
 
 ## **Notable Raspberry Pi Preferences**
