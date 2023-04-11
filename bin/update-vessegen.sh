@@ -1,6 +1,9 @@
 #!/bin/bash
 
-if [[ $(git fetch) ]]; then
+git fetch
+status=($(git status | grep "branch is behind"))
+if [[ "$status" ]]; then
+    echo "Updates found, installing updates..."
     git pull
     sudo chmod +x ./bin/*
     ./bin/install-vessegen.sh
