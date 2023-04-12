@@ -506,7 +506,8 @@ def add_media_to_single_reservoir(chamber_id, window, led, start_time):
         # Once the user submits, add the media to the correct reservoir and
         # update the chamber information
         elif event == 'Submit':
-            chambers[chamber_id]['media_in_chamber'] += media_to_add
+            chambers[chamber_id]['media_in_chamber'] =\
+                max(media_to_add + chambers[chamber_id]['media_in_chamber'], 0)
             break
 
         # If the user wishes to reset the counter and display, do so
@@ -593,8 +594,9 @@ def add_media_to_all_reservoirs(window, led, start_time):
             # Get the user input and update the chamber information
             for chamber_id in range(8):
                 if chambers[chamber_id]['status'] != 'Unused':
-                    chambers[chamber_id]['media_in_chamber'] +=\
-                        round(media_to_add, 1)
+                    chambers[chamber_id]['media_in_chamber'] =\
+                        max(media_to_add + chambers[chamber_id]
+                            ['media_in_chamber'], 0)
             break
 
         # If the user wishes to reset the counter and display, do so
@@ -723,7 +725,7 @@ def change_media_in_single_chamber(chamber_id, window, led, start_time):
         chambers[chamber_id]["status"] = "Running"
         chambers[chamber_id]["last_changed"] = datetime.datetime.now()
         chambers[chamber_id]["media_in_chamber"] =\
-            round(chambers[chamber_id]["media_in_chamber"] - vol, 1)
+            round(max(chambers[chamber_id]["media_in_chamber"] - vol, 0), 1)
         update_monitor(window, led, start_time)
 
 
