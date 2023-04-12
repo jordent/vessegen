@@ -14,3 +14,4 @@ pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 pip install .
 deactivate
+sudo cp ./executable/vessegen.png /usr/bin/vessegen.png

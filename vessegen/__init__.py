@@ -1,13 +1,11 @@
 """A program for running Vessegen's Bioreactor."""
-import os
 import RPi.GPIO as GPIO  # pylint: disable=consider-using-from-import
 
 # Declare the amount that should occur in a media change
 MEDIA_VOL = 30.0
 
 # Declare the icon path for the windows
-ICON_PATH = os.path.join(os.path.dirname(__path__[0]),
-                         'executable/vessegen.png')
+ICON_PATH = '/usr/bin/vessegen.png'
 
 # Create a list of dictionaries to keep track of which GPIO pins are for which
 # chamber
