@@ -3,7 +3,7 @@ import time
 import datetime
 import PySimpleGUI as sg
 import humanize
-import RPi.GPIO as GPIO  # pylint: disable=consider-using-from-import
+# import RPi.GPIO as GPIO  # pylint: disable=consider-using-from-import
 import vessegen
 
 # Initialize a structure to keep track of chambers
@@ -20,7 +20,7 @@ for n in range(8):
 # Initialize a shutdown dictionary to control shutdown if desired
 shutdown = {
     "main": False,
-    "settings": False
+    "settings": False,
 }
 
 
@@ -361,24 +361,22 @@ def start_monitoring_window(start_time):
                        element_justification='center', size=(1024, 595),
                        finalize=True, icon=vessegen.ICON_PATH)
 
-    # Draw the LED blinking indicator
-    led = led_spot.draw_circle((10, 10), 9, fill_color='white',
-                               line_color="black", line_width=1)
-
-    # Note that its inital color is white
-    led_color = "white"
+    # Draw the LED blinking indicator, storing it as a dictionary to keep track
+    # of it and its color
+    led = {
+        "obj": led_spot.draw_circle((10, 10), 9, fill_color='white',
+                                    line_color="black", line_width=1),
+        "color": "white",
+        "last_updated": time.time()
+    }
 
     # Loop until the user closes the window
     while True:
-        # Read the user input from the GUI, stopping to run stuff every second
-        event, _ = window.read(timeout=1000)
+        # Read the user input from the GUI
+        event, _ = window.read(timeout=100)
 
-        # Update the monitor by swapping the color of the led, updating the
-        # spot at the window, and then updating the rest of the text on the
-        # screen. This should update once a second.
-        led_color = "green" if led_color == "white" else "white"
-        window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
-        update_monitor(window, start_time)
+        # First, the monitor should check if it needs to update itself
+        update_monitor(window, led, start_time)
 
         # If the user has selected "Cancel", "Finished", orclosed the window,
         # then exit the program
@@ -388,52 +386,61 @@ def start_monitoring_window(start_time):
         # If the user has selected to add media to all reservoirs, then add the
         # media specified by the user to all of the chambers
         if event == 'Add Media to All Reservoirs':
-            add_media_to_all_reservoirs(led, led_color, window, start_time)
+            add_media_to_all_reservoirs(window, led, start_time)
 
         # If the user has selected to add media to a single reservoir, then add
         # the media specified to that single chamber
         elif event in [f"-CHAMBER{i}-ADDMEDIA-" for i in range(1, 9)]:
-            add_media_to_single_reservoir(int(event[8]) - 1, led, led_color,
-                                          window, start_time)
+            add_media_to_single_reservoir(int(event[8]) - 1,
+                                          window, led, start_time)
 
         # If the user has selected to change media in all chambers, then start
         # changing the media in all of the chambers
         elif event == 'Change Media in All Chambers':
-            change_media_in_all_chambers(led, led_color, start_time, window)
+            change_media_in_all_chambers(window, led, start_time)
 
         # If the user has selected change media in a single chamber, then start
         # changing the media in that chamber
         elif event in [f"-CHAMBER{i}-CHANGEMEDIA-" for i in range(1, 9)]:
-            change_media_in_single_chamber(led, led_color, start_time, window,
-                                           int(event[8]) - 1)
+            change_media_in_single_chamber(int(event[8]) - 1,
+                                           window, led, start_time)
 
     # Once appropriate, close the window
     window.close()
 
 
-def update_monitor(window, start_time):
+def update_monitor(window, led, start_time):
     """Update the window with information from the chambers."""
-    # Update the text shown on the window
-    window['-RUNTIME-'].update("System running for: " +
-                               humanize.naturaldelta(datetime.datetime.now() -
-                                                     start_time))
-    for i in range(8):
-        if chambers[i]['is_in_use']:
-            window['-CHAMBER' + str(chambers[i]['chamber_id']) +
-                   '-LASTCHANGE-'].update("Last Change: " +
-                                          humanize.naturaltime(
-                                           datetime.datetime.now() -
-                                           chambers[i]["last_changed"]))
-            window['-CHAMBER' + str(chambers[i]['chamber_id']) +
-                   '-MEDIARES-'].update("Media in Reservoir: " +
-                                        str(round(
-                                            chambers[i]["media_in_chamber"],
-                                            1)) + " mL")
-    window.refresh()
+    if time.time() > led["last_updated"] + 1:
+        # Blink the LED
+        led["color"] = "green" if led["color"] == "white" else "white"
+        window["-LED-SPOT-"].Widget.itemconfig(led["obj"], fill=led["color"])
+
+        # Update the text shown on the window
+        window['-RUNTIME-'].update("System running for: " +
+                                   humanize.naturaldelta(datetime.
+                                                         datetime.now() -
+                                                         start_time))
+        for i in range(8):
+            if chambers[i]['is_in_use']:
+                window["-CHAMBER" + str(chambers[i]["chamber_id"]) +
+                       "-STATUS-"].update("Status: " + chambers[i]["status"])
+                window['-CHAMBER' + str(chambers[i]['chamber_id']) +
+                       '-LASTCHANGE-'].update("Last Change: " +
+                                              humanize.naturaltime(
+                                                datetime.datetime.now() -
+                                                chambers[i]["last_changed"]))
+                window['-CHAMBER' + str(chambers[i]['chamber_id']) +
+                       '-MEDIARES-'].update("Media in Reservoir: " +
+                                            str(round(
+                                                chambers[i]
+                                                ["media_in_chamber"],
+                                                1)) + " mL")
+        window.refresh()
+        led["last_updated"] = time.time()
 
 
-def add_media_to_single_reservoir(chamber_id, led, led_color, window,
-                                  start_time):
+def add_media_to_single_reservoir(chamber_id, window, led, start_time):
     """Add the media specified by the user to the specified reservoir.
 
     Note, this function takes in the led indicator information as well as the
@@ -478,13 +485,11 @@ def add_media_to_single_reservoir(chamber_id, led, led_color, window,
             popup_window['-MEDIAVAL-'].update(str(media_to_add))
             popup_window.refresh()
 
-        # Read the user input from the GUI, stopping every second
-        event, _ = popup_window.read(timeout=1000)
+        # Read the user input from the GUI
+        event, _ = popup_window.read(timeout=100)
 
-        # Update the monitor in the same way as the parent window does
-        led_color = "green" if led_color == "white" else "white"
-        window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
-        update_monitor(window, start_time)
+        # First, the monitor should check if it needs to update itself
+        update_monitor(window, led, start_time)
 
         # If the user has selected "Cancel" or closed the window, then exit the
         # popup window
@@ -519,7 +524,7 @@ def add_media_to_single_reservoir(chamber_id, led, led_color, window,
     popup_window.close()
 
 
-def add_media_to_all_reservoirs(led, led_color, window, start_time):
+def add_media_to_all_reservoirs(window, led, start_time):
     """Add the media specified by the user to all reservoirs.
 
     Note, this function takes in the led indicator information as well as the
@@ -564,13 +569,11 @@ def add_media_to_all_reservoirs(led, led_color, window, start_time):
             popup_window['-MEDIAVAL-'].update(str(media_to_add))
             popup_window.refresh()
 
-        # Read the user input from the GUI, stopping every second
-        event, _ = popup_window.read(timeout=1000)
+        # Read the user input from the GUI
+        event, _ = popup_window.read(timeout=100)
 
-        # Update the monitor in the same way as the parent window does
-        led_color = "green" if led_color == "white" else "white"
-        window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
-        update_monitor(window, start_time)
+        # First, the monitor should check if it needs to update itself
+        update_monitor(window, led, start_time)
 
         # If the user has selected "Cancel" or closed the window, then exit the
         # popup window
@@ -611,13 +614,12 @@ def add_media_to_all_reservoirs(led, led_color, window, start_time):
     popup_window.close()
 
 
-def change_media_in_single_chamber(led, led_color, start_time, window,
-                                   chamber_id):
+def change_media_in_single_chamber(chamber_id, window, led, start_time):
     """Change the media in the specified chamber.
 
     Note, this function takes in the led indicator information as well as the
     parent window so that it can keep updating the parent window while it
-    waits for media changes to complete.
+    waits for the user to be finished with this screen.
     """
     # First, make sure that we think there is enough media to complete a media
     # change
@@ -642,13 +644,11 @@ def change_media_in_single_chamber(led, led_color, start_time, window,
                                  finalize=True, icon=vessegen.ICON_PATH)
 
         while True:
-            # Read the user input from the GUI, with a one second timeout
-            event, _ = popup_window.read(timeout=1000)
+            # Read the user input from the GUI
+            event, _ = popup_window.read(timeout=100)
 
-            # Update the monitor (just as was done previously)
-            led_color = "green" if led_color == "white" else "white"
-            window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
-            update_monitor(window, start_time)
+            # First, the monitor should check if it needs to update itself
+            update_monitor(window, led, start_time)
 
             # If the user has selected "OK", "Cancel", or closed the window,
             # then exit the popup window
@@ -658,67 +658,65 @@ def change_media_in_single_chamber(led, led_color, start_time, window,
         # Close the popup window
         popup_window.close()
     else:
-        # Inform the user that we are removing media (update GUI)
-        chambers[chamber_id]["status"] = "Removing media..."
-        window["-CHAMBER" + str(chamber_id + 1) +
-               "-STATUS-"].update("Status: " + chambers[chamber_id]["status"])
-        window.refresh()
+        # Inform the user that we are calculating time (update GUI)
+        chambers[chamber_id]["status"] = "Calculating time..."
+
+        # Check if the monitor needs to be updated
+        update_monitor(window, led, start_time)
 
         # Determine the time it will take to remove the media
-        time_to_remove, _ = calculate_media_change_time(vessegen.MEDIA_VOL)
+        time_to_remove, _ = calculate_media_change_time(vessegen.MEDIA_VOL,
+                                                        window, led,
+                                                        start_time)
 
-        # Send the signal to remove the media and wait, continuing to update
-        # the parent window in one second intervals
+        # Inform the user that we are removing media (update GUI)
+        chambers[chamber_id]["status"] = "Removing media..."
+
+        # Send the signal to remove the media and wait
         # pylint: disable=no-member
-        GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.HIGH)
+        # GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.HIGH)
         started = time.time()
-        last_updated = time.time()
-
         while True:
+            update_monitor(window, led, start_time)
             if time.time() > started + time_to_remove:
                 break
-            if time.time() > last_updated + 1:
-                led_color = "green" if led_color == "white" else "white"
-                window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
-                update_monitor(window, start_time)
-                last_updated = time.time()
             time.sleep(0.05)
 
         # Send the close signal and wait a brief moment to ensure closure
         # pylint: disable=no-member
-        GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.LOW)
+        # GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.LOW)
         time.sleep(0.1)
+
+        # Inform the user that we are calculating time (update GUI)
+        chambers[chamber_id]["status"] = "Calculating time..."
+
+        # Check if the monitor needs to be updated
+        update_monitor(window, led, start_time)
+
+        # Calculate the time it will take to add the media as well as the
+        # volume we estimate to be removed
+        time_to_add, vol = calculate_media_change_time(chambers[chamber_id]
+                                                       ["media_in_chamber"],
+                                                       window, led,
+                                                       start_time, True)
 
         # Inform the user that we are adding media (update GUI)
         chambers[chamber_id]["status"] = "Adding media..."
-        window["-CHAMBER" + str(chamber_id + 1) +
-               "-STATUS-"].update("Status: " + chambers[chamber_id]["status"])
-        window.refresh()
 
-        # Calculate the time it will take to add the media
-        time_to_add, vol = calculate_media_change_time(chambers[chamber_id]
-                                                       ["media_in_chamber"],
-                                                       True)
-
-        # Send the signal to remove the media and wait, continuing to update
-        # the parent window in one second intervals
+        # Send the signal to remove the media and wait
         # pylint: disable=no-member
-        GPIO.output(vessegen.GPIO_PINS[chamber_id]["add"], GPIO.HIGH)
+        # GPIO.output(vessegen.GPIO_PINS[chamber_id]["add"], GPIO.HIGH)
         started = time.time()
 
         while True:
+            update_monitor(window, led, start_time)
             if time.time() > started + time_to_add:
                 break
-            if time.time() > last_updated + 1:
-                led_color = "green" if led_color == "white" else "white"
-                window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
-                update_monitor(window, start_time)
-                last_updated = time.time()
             time.sleep(0.05)
 
         # Send the close signal
         # pylint: disable=no-member
-        GPIO.output(vessegen.GPIO_PINS[chamber_id]["add"], GPIO.LOW)
+        # GPIO.output(vessegen.GPIO_PINS[chamber_id]["add"], GPIO.LOW)
 
         # Inform the user that we are running again, decrement the media
         # removed from the reservoir
@@ -726,25 +724,27 @@ def change_media_in_single_chamber(led, led_color, start_time, window,
         chambers[chamber_id]["last_changed"] = datetime.datetime.now()
         chambers[chamber_id]["media_in_chamber"] =\
             round(chambers[chamber_id]["media_in_chamber"] - vol, 1)
-        window["-CHAMBER" + str(chamber_id + 1) +
-               "-STATUS-"].update("Status: " + chambers[chamber_id]["status"])
-        window.refresh()
+        update_monitor(window, led, start_time)
 
 
-def change_media_in_all_chambers(led, led_color, start_time, window):
+def change_media_in_all_chambers(window, led, start_time):
     """Change the media in all of the used chambers."""
     # For all of the chambers in use, change the media
     for i in range(8):
         if chambers[i]['is_in_use']:
-            change_media_in_single_chamber(led,
-                                           led_color, start_time, window, i)
+            change_media_in_single_chamber(i, window, led, start_time)
 
 
-def calculate_media_change_time(media_in_res, add=False):
+def calculate_media_change_time(media_in_res,
+                                window, led, start_time, add=False):
     """Calculate the estimated time to complete a media change.
 
     This function defaults to removing media (add is False). To calculate time
     for adding media, simply set add to True.
+
+    Note, this function takes in the led indicator information as well as the
+    parent window so that it can keep updating the parent window while it
+    waits for the user to be finished with this screen.
     """
     # The diameters of the tubes change depending on if it is the adding or
     # removing solenoid.
@@ -763,6 +763,7 @@ def calculate_media_change_time(media_in_res, add=False):
     # Approximate the time to complete by iterating over small time steps and
     # estimating the volume added for that small time step
     while volume_added < vessegen.MEDIA_VOL:
+        update_monitor(window, led, start_time)
         vol_step = bulk*((diameter/2)*(diameter/2))*time_step
         time_to_complete += time_step
         volume_added += vol_step
