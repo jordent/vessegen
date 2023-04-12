@@ -459,8 +459,8 @@ def add_media_to_single_reservoir(chamber_id, led, led_color, window,
          sg.Button("Empty Resevoir", font='Roboto 15', pad=(5, 20)),
          sg.Button("Submit", font='Roboto 15', pad=(5, 20)),
          sg.Cancel(font='Roboto 15', pad=(5, 20))],
-        [sg.Text(text="Note: include any volume of extra additives added \
-                 to the media.", font='Roboto 10', pad=(0, 20))]
+        [sg.Text(text="Note: include any volume of extra additives added " +
+                 "to the media.", font='Roboto 10', pad=(0, 20))]
     ]
 
     # Start the "popup" window
@@ -502,6 +502,7 @@ def add_media_to_single_reservoir(chamber_id, led, led_color, window,
         # update the chamber information
         elif event == 'Submit':
             chambers[chamber_id]['media_in_chamber'] += media_to_add
+            break
 
         # If the user wishes to reset the counter and display, do so
         if event == 'Set to Zero':
@@ -544,8 +545,8 @@ def add_media_to_all_reservoirs(led, led_color, window, start_time):
          sg.Button("Empty Resevoir", font='Roboto 15', pad=(5, 20)),
          sg.Button("Submit", font='Roboto 15', pad=(5, 20)),
          sg.Cancel(font='Roboto 15', pad=(5, 20))],
-        [sg.Text(text="Note: include any volume of extra additives \
-                 added to the media.", font='Roboto 10', pad=(0, 20))]
+        [sg.Text(text="Note: include any volume of extra additives " +
+                 "added to the media.", font='Roboto 10', pad=(0, 20))]
     ]
 
     # Launch the "popup" window
@@ -622,14 +623,15 @@ def change_media_in_single_chamber(led, led_color, start_time, window,
     # change
     if chambers[chamber_id]["media_in_chamber"] < vessegen.MEDIA_VOL:
         layout = [
-            [sg.Text(text="Are you sure there is enough media in reservoir " +
+            [sg.Text(text="Are you sure there is enough media in Reservoir " +
                      str(chamber_id + 1) + "?", font='Roboto 20',
                      pad=(0, 20))],
-            [sg.Text(text="There should be at least " + vessegen.MEDIA_VOL +
-                     " in a reservoir.", font='Roboto 20',
+            [sg.Text(text="There should be at least " +
+                     str(vessegen.MEDIA_VOL) +
+                     "mL in the reservoir.", font='Roboto 20',
                      pad=(0, 20))],
-            [sg.Text(text="Note: if there is enough media, make sure the \
-                     value noted by the software is accurate.",
+            [sg.Text(text="Note: if there is enough media, make sure the " +
+                     "value noted by the software is accurate.",
                      font='Roboto 15', pad=(0, 20))],
             [sg.Button("OK", font='Roboto 15', pad=(5, 20))]
         ]
@@ -651,10 +653,10 @@ def change_media_in_single_chamber(led, led_color, start_time, window,
             # If the user has selected "OK", "Cancel", or closed the window,
             # then exit the popup window
             if event in ('Cancel', None, 'OK', sg.WIN_CLOSED):
-                pass
+                break
 
-            # Close the popup window
-            popup_window.close()
+        # Close the popup window
+        popup_window.close()
     else:
         # Inform the user that we are removing media (update GUI)
         chambers[chamber_id]["status"] = "Removing media..."
@@ -670,19 +672,22 @@ def change_media_in_single_chamber(led, led_color, start_time, window,
         # pylint: disable=no-member
         GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.HIGH)
         started = time.time()
+        last_updated = time.time()
 
         while True:
             if time.time() > started + time_to_remove:
                 break
-            led_color = "green" if led_color == "white" else "white"
-            window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
-            update_monitor(window, start_time)
-            time.sleep(0.1)
+            if time.time() > last_updated + 1:
+                led_color = "green" if led_color == "white" else "white"
+                window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
+                update_monitor(window, start_time)
+                last_updated = time.time()
+            time.sleep(0.05)
 
         # Send the close signal and wait a brief moment to ensure closure
         # pylint: disable=no-member
         GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.LOW)
-        time.sleep(0.5)
+        time.sleep(0.1)
 
         # Inform the user that we are adding media (update GUI)
         chambers[chamber_id]["status"] = "Adding media..."
@@ -704,15 +709,16 @@ def change_media_in_single_chamber(led, led_color, start_time, window,
         while True:
             if time.time() > started + time_to_add:
                 break
-            led_color = "green" if led_color == "white" else "white"
-            window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
-            update_monitor(window, start_time)
-            time.sleep(0.1)
+            if time.time() > last_updated + 1:
+                led_color = "green" if led_color == "white" else "white"
+                window["-LED-SPOT-"].Widget.itemconfig(led, fill=led_color)
+                update_monitor(window, start_time)
+                last_updated = time.time()
+            time.sleep(0.05)
 
         # Send the close signal
         # pylint: disable=no-member
         GPIO.output(vessegen.GPIO_PINS[chamber_id]["add"], GPIO.LOW)
-        time.sleep(0.1)
 
         # Inform the user that we are running again, decrement the media
         # removed from the reservoir
