@@ -3,7 +3,7 @@ import time
 import datetime
 import PySimpleGUI as sg
 import humanize
-# import RPi.GPIO as GPIO  # pylint: disable=consider-using-from-import
+import RPi.GPIO as GPIO  # pylint: disable=consider-using-from-import
 import vessegen
 
 # Initialize a structure to keep track of chambers
@@ -674,7 +674,7 @@ def change_media_in_single_chamber(chamber_id, window, led, start_time):
 
         # Send the signal to remove the media and wait
         # pylint: disable=no-member
-        # GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.HIGH)
+        GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.HIGH)
         started = time.time()
         while True:
             update_monitor(window, led, start_time)
@@ -684,7 +684,7 @@ def change_media_in_single_chamber(chamber_id, window, led, start_time):
 
         # Send the close signal and wait a brief moment to ensure closure
         # pylint: disable=no-member
-        # GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.LOW)
+        GPIO.output(vessegen.GPIO_PINS[chamber_id]["remove"], GPIO.LOW)
         time.sleep(0.1)
 
         # Inform the user that we are calculating time (update GUI)
@@ -705,7 +705,7 @@ def change_media_in_single_chamber(chamber_id, window, led, start_time):
 
         # Send the signal to remove the media and wait
         # pylint: disable=no-member
-        # GPIO.output(vessegen.GPIO_PINS[chamber_id]["add"], GPIO.HIGH)
+        GPIO.output(vessegen.GPIO_PINS[chamber_id]["add"], GPIO.HIGH)
         started = time.time()
 
         while True:
@@ -716,7 +716,7 @@ def change_media_in_single_chamber(chamber_id, window, led, start_time):
 
         # Send the close signal
         # pylint: disable=no-member
-        # GPIO.output(vessegen.GPIO_PINS[chamber_id]["add"], GPIO.LOW)
+        GPIO.output(vessegen.GPIO_PINS[chamber_id]["add"], GPIO.LOW)
 
         # Inform the user that we are running again, decrement the media
         # removed from the reservoir
