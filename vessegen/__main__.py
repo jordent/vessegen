@@ -1,10 +1,13 @@
 """Get user input and run the bioreactor."""
+import os
 import PySimpleGUI as sg
 import humanize
 import datetime
 import time
 import threading
 import RPi.GPIO as GPIO
+
+ICON_PATH = os.path.dirname(os.path.dirname(__file__))+'/executable/vessegen.png'
 
 GPIO.setwarnings(False)
 
@@ -148,7 +151,7 @@ def get_user_settings():
                sg.Column(same_settings_media, visible=False, key='-SAMESETTINGSMEDIA-', element_justification='center')]]
     
     # Initialize the window
-    window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', size=(1024,595))
+    window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', size=(1024,595), icon=ICON_PATH)
     
     # Start in the starting window column
     current_layout = '-STARTCOL-'
@@ -276,7 +279,7 @@ def start_monitoring_window(start_time):
     ]
 
     # Initialize the window
-    window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', size=(1024,595), finalize=True)
+    window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', size=(1024,595), finalize=True, icon=ICON_PATH)
 
     # Draw the LED
     led = led_spot.draw_circle((10,10), 9, fill_color='white', line_color="black", line_width=1)
@@ -338,7 +341,7 @@ def add_media_to_single_reservoir(chamber_id, led, led_color, window, start_time
         [sg.Button("Set to Zero", font='Roboto 15', pad=(5,20)), sg.Button("Empty Resevoir", font='Roboto 15', pad=(5,20)), sg.Button("Submit", font='Roboto 15', pad=(5,20)), sg.Cancel(font='Roboto 15', pad=(5,20))],
         [sg.Text(text = "Note: include any volume of extra additives added to the media.", font='Roboto 10', pad=(0,20))]
     ]
-    popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', finalize=True)
+    popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', finalize=True, icon=ICON_PATH)
 
     media_to_add = 0
     while True:
@@ -430,7 +433,7 @@ def add_media_to_all_reservoirs(led, led_color, window, start_time):
         [sg.Button("Set to Zero", font='Roboto 15', pad=(5,20)), sg.Button("Empty Resevoir", font='Roboto 15', pad=(5,20)), sg.Button("Submit", font='Roboto 15', pad=(5,20)), sg.Cancel(font='Roboto 15', pad=(5,20))],
         [sg.Text(text = "Note: include any volume of extra additives added to the media.", font='Roboto 10', pad=(0,20))]
     ]
-    popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', finalize=True)
+    popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', finalize=True, icon=ICON_PATH)
 
     media_to_add = 0
     while True:
@@ -522,7 +525,7 @@ def change_media_in_single_reservoir(led, led_color, start_time, window, chamber
             [sg.Text(text = "Note: if there is enough media, make sure the value recorded is accurate.", font='Roboto 15', pad=(0,20))],
             [sg.Button("OK", font='Roboto 15', pad=(5,20))]
         ]
-        popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', finalize=True)
+        popup_window = sg.Window("Vessegen Bioreactor Software", layout, element_justification='center', finalize=True, icon=ICON_PATH)
 
         while True:
             # Read the user input from the GUI
