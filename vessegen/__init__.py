@@ -2,6 +2,9 @@
 import os
 import RPi.GPIO as GPIO  # pylint: disable=consider-using-from-import
 
+# Declare the amount that should occur in a media change
+MEDIA_VOL = 30.0
+
 # Declare the icon path for the windows
 ICON_PATH = os.path.join(os.path.dirname(__path__[0]),
                          'executable/vessegen.png')
