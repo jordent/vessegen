@@ -23,7 +23,6 @@ shutdown = {
     "settings": False,
 }
 
-
 def reset_chambers():
     """Reset the chambers if requested.
 
@@ -778,6 +777,93 @@ def calculate_media_change_time(media_in_res,
     return time_to_complete, volume_added
 
 
+def chamber_wash_screen():
+    """Display the screen that can control a chamber wash."""
+    prompt = [
+            [sg.Text(text="Would you like to do a wash cycle?",
+                     font='Roboto 20', pad=(0, 20))],
+            [sg.Button("Yes", font='Roboto 15', pad=(5, 20)),
+             sg.Button("No", font='Roboto 15', pad=(5, 20))]
+        ]
+    
+    confirm_empty = [
+            [sg.Text(text="Please make sure the waste is empty.",
+                     font='Roboto 20', pad=(0, 20))],
+            [sg.Button("Ok", font='Roboto 15', pad=(5, 20), key='OK1'),
+             sg.Button("Cancel", font='Roboto 15', pad=(5, 20), key='CANCEL1')]
+        ]
+    
+    confirm_added = [
+            [sg.Text(text="Add the wash media to reservoirs that were used.",
+                     font='Roboto 20', pad=(0, 20))],
+            [sg.Button("Ok", font='Roboto 15', pad=(5, 20), key='OK2'),
+             sg.Button("Cancel", font='Roboto 15', pad=(5, 20), key='CANCEL2')]
+        ]
+    
+    running_screen = [
+        [sg.Text(text="Wash cycle running, please wait...",
+                     font='Roboto 20', pad=(0, 20))]
+    ]
+
+    wash_complete = [
+        [sg.Text(text="Wash cycle complete!",
+                     font='Roboto 20', pad=(0, 20))],
+        [sg.Button("Ok", font='Roboto 15', pad=(5, 20), key='OK3')]
+    ]
+
+    layout = [[sg.Column(prompt, key='-PROMPT-',
+                         element_justification='center'),
+               sg.Column(confirm_empty, visible=False, key='-CONFIRM-EMPTY-',
+                         element_justification='center'),
+               sg.Column(confirm_added, visible=False, key='-CONFIRM-ADDED-',
+                         element_justification='center'),
+               sg.Column(running_screen, visible=False, key='-RUNNING-',
+                         element_justification='center'),
+               sg.Column(wash_complete, visible=False, key='-COMPLETE-',
+                         element_justification='center')]]
+
+    # If there isn't enough media in the reservoir, alert the user
+    window = sg.Window("Vessegen Bioreactor Software", layout,
+                                element_justification='center',
+                                finalize=True, icon=vessegen.ICON_PATH)
+    
+    # Start in the prompt
+    current_layout = '-PROMPT-'
+
+    while True:
+        # Read the user input from the GUI
+        event, _ = window.read()
+
+        if event in ('No', 'CANCEL1', 'CANCEL2', 'OK3', None, sg.WIN_CLOSED):
+            break
+
+        elif event in ('Yes'):
+            window[current_layout].update(visible=False)
+            current_layout = '-CONFIRM-EMPTY-'
+            window[current_layout].update(visible=True)
+
+        elif event in ('OK1'):
+            window[current_layout].update(visible=False)
+            current_layout = '-CONFIRM-ADDED-'
+            window[current_layout].update(visible=True)
+
+        elif event in ('OK2'):
+            window[current_layout].update(visible=False)
+            current_layout = '-RUNNING-'
+            window[current_layout].update(visible=True)
+            wash_chambers()
+            window[current_layout].update(visible=False)
+            current_layout = '-COMPLETE-'
+            window[current_layout].update(visible=True)
+
+
+    window.close()
+
+
+def wash_chambers():
+    """Wash the chambers in use."""
+    pass
+
 def main():
     """Top level function."""
     while not shutdown['main']:
@@ -802,6 +888,8 @@ def main():
         # Get the monitoring window
         start_monitoring_window(start_time)
 
+        # Prompt the user if they would like to do a wash cycle
+        chamber_wash_screen()
 
 if __name__ == "__main__":
     main()
