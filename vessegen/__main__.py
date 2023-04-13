@@ -145,6 +145,10 @@ def get_user_settings():
     window = sg.Window("Vessegen Bioreactor Software", layout,
                        element_justification='center', size=(1024, 595),
                        icon=vessegen.ICON_PATH)
+    window.close()
+    window = sg.Window("Vessegen Bioreactor Software", layout,
+                       element_justification='center', size=(1024, 595),
+                       icon=vessegen.ICON_PATH)
 
     # Start in the starting window column
     current_layout = '-STARTCOL-'
@@ -825,7 +829,8 @@ def chamber_wash_screen():
     # If there isn't enough media in the reservoir, alert the user
     window = sg.Window("Vessegen Bioreactor Software", layout,
                                 element_justification='center',
-                                finalize=True, icon=vessegen.ICON_PATH)
+                                finalize=True, icon=vessegen.ICON_PATH,
+                                size=(1024, 595))
     
     # Start in the prompt
     current_layout = '-PROMPT-'
