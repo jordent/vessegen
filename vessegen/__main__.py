@@ -772,8 +772,9 @@ def calculate_media_change_time(media_in_res,
         update_monitor(window, led, start_time)
         vol_step = bulk*((diameter/2)*(diameter/2))*time_step
         time_to_complete += time_step
-        volume_added += vol_step
+        volume_added += min(vol_step, 0.0001)
         bulk -= vol_step
+        print(volume_added)
 
     # Add a margin of error
     time_to_complete = 5
