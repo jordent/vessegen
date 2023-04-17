@@ -670,6 +670,8 @@ def change_media_in_single_chamber(chamber_id, window, led, start_time):
         time_to_remove, _ = calculate_media_change_time(vessegen.MEDIA_VOL,
                                                         window, led,
                                                         start_time)
+        # HARD CODE FOR NOW
+        time_to_remove = 80
 
         # Inform the user that we are removing media (update GUI)
         chambers[chamber_id]["status"] = "Removing media..."
@@ -701,6 +703,8 @@ def change_media_in_single_chamber(chamber_id, window, led, start_time):
                                                        ["media_in_chamber"],
                                                        window, led,
                                                        start_time, True)
+        # HARD CODE FOR NOW
+        time_to_add = 20
 
         # Inform the user that we are adding media (update GUI)
         chambers[chamber_id]["status"] = "Adding media..."
