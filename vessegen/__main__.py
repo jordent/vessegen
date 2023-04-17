@@ -37,9 +37,9 @@ def reset_chambers():
         chamber["last_changed"] = None
         chamber["media_in_chamber"] = 0
         chamber["status"] = "Unused"
-        GPIO.output(vessegen.GPIO_PINS[chamber["chamber_id"]]["remove"],
+        GPIO.output(vessegen.GPIO_PINS[chamber["chamber_id"] - 1]["remove"],
                     GPIO.LOW)
-        GPIO.output(vessegen.GPIO_PINS[chamber["chamber_id"]]["add"],
+        GPIO.output(vessegen.GPIO_PINS[chamber["chamber_id"] - 1]["add"],
                     GPIO.LOW)
 
 
