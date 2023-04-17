@@ -3,6 +3,7 @@ import time
 import datetime
 import PySimpleGUI as sg
 import humanize
+import atexit
 import RPi.GPIO as GPIO  # pylint: disable=consider-using-from-import
 import vessegen
 
@@ -901,6 +902,9 @@ def main():
 
         # Prompt the user if they would like to do a wash cycle
         chamber_wash_screen()
+
+
+atexit.register(reset_chambers)
 
 
 if __name__ == "__main__":
