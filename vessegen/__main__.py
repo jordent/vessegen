@@ -774,7 +774,6 @@ def calculate_media_change_time(media_in_res,
         time_to_complete += time_step
         volume_added += max(vol_step, 0.0001)
         bulk -= vol_step
-        print(volume_added)
 
     # Add a margin of error
     time_to_complete = 5
@@ -871,8 +870,12 @@ def wash_chambers():
     """Wash the chambers in use."""
     pass
 
+
 def main():
     """Top level function."""
+    # Make sure that the GPIO pins are set to LOW
+    vessegen.set_gpio()
+
     while not shutdown['main']:
         # Reset the chambers
         reset_chambers()
@@ -897,6 +900,7 @@ def main():
 
         # Prompt the user if they would like to do a wash cycle
         chamber_wash_screen()
+
 
 if __name__ == "__main__":
     main()
