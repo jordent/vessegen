@@ -3,6 +3,7 @@ import time
 import datetime
 import PySimpleGUI as sg
 import humanize
+import pyautogui as cursor
 import RPi.GPIO as GPIO  # pylint: disable=consider-using-from-import
 import vessegen
 
@@ -22,6 +23,8 @@ shutdown = {
     "main": False,
     "settings": False,
 }
+
+cursor.moveTo(1024, 600)
 
 def reset_chambers():
     """Reset the chambers if requested.
@@ -142,10 +145,6 @@ def get_user_settings():
                          element_justification='center')]]
 
     # Initialize the window
-    window = sg.Window("Vessegen Bioreactor Software", layout,
-                       element_justification='center', size=(1024, 595),
-                       icon=vessegen.ICON_PATH)
-    window.close()
     window = sg.Window("Vessegen Bioreactor Software", layout,
                        element_justification='center', size=(1024, 595),
                        icon=vessegen.ICON_PATH)
