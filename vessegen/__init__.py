@@ -2,7 +2,7 @@
 import RPi.GPIO as GPIO  # pylint: disable=consider-using-from-import
 
 # Declare the amount that should occur in a media change
-MEDIA_VOL = 40.0
+MEDIA_VOL = 30.0
 
 # Declare the icon path for the windows
 ICON_PATH = '/usr/bin/vessegen.png'
