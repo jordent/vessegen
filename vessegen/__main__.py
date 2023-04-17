@@ -36,6 +36,10 @@ def reset_chambers():
         chamber["last_changed"] = None
         chamber["media_in_chamber"] = 0
         chamber["status"] = "Unused"
+        GPIO.output(vessegen.GPIO_PINS[chamber["chamber_id"]]["remove"],
+                    GPIO.LOW)
+        GPIO.output(vessegen.GPIO_PINS[chamber["chamber_id"]]["add"],
+                    GPIO.LOW)
 
 
 def get_user_settings():
@@ -873,9 +877,6 @@ def wash_chambers():
 
 def main():
     """Top level function."""
-    # Make sure that the GPIO pins are set to LOW
-    vessegen.set_gpio()
-
     while not shutdown['main']:
         # Reset the chambers
         reset_chambers()
