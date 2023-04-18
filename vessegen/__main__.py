@@ -791,34 +791,34 @@ def chamber_wash_screen():
     """Display the screen that can control a chamber wash."""
     prompt = [
             [sg.Text(text="Would you like to do a wash cycle?",
-                     font='Roboto 20', pad=(0, 20))],
-            [sg.Button("Yes", font='Roboto 15', pad=(5, 20)),
-             sg.Button("No", font='Roboto 15', pad=(5, 20))]
+                     font='Roboto 30', pad=((0, 0), (120, 20)))],
+            [sg.Button("Yes", font='Roboto 20', pad=(5, 20)),
+             sg.Button("No", font='Roboto 20', pad=(5, 20))]
         ]
     
     confirm_empty = [
             [sg.Text(text="Please make sure the waste is empty.",
-                     font='Roboto 20', pad=(0, 20))],
-            [sg.Button("Ok", font='Roboto 15', pad=(5, 20), key='OK1'),
-             sg.Button("Cancel", font='Roboto 15', pad=(5, 20), key='CANCEL1')]
+                     font='Roboto 30', pad=((0, 0), (120, 20)))],
+            [sg.Button("Ok", font='Roboto 20', pad=(5, 20), key='OK1'),
+             sg.Button("Cancel", font='Roboto 20', pad=(5, 20), key='CANCEL1')]
         ]
     
     confirm_added = [
             [sg.Text(text="Add the wash media to reservoirs that were used.",
-                     font='Roboto 20', pad=(0, 20))],
-            [sg.Button("Ok", font='Roboto 15', pad=(5, 20), key='OK2'),
-             sg.Button("Cancel", font='Roboto 15', pad=(5, 20), key='CANCEL2')]
+                     font='Roboto 30', pad=((0, 0), (120, 20)))],
+            [sg.Button("Ok", font='Roboto 20', pad=(5, 20), key='OK2'),
+             sg.Button("Cancel", font='Roboto 20', pad=(5, 20), key='CANCEL2')]
         ]
     
     running_screen = [
         [sg.Text(text="Wash cycle running, please wait...",
-                     font='Roboto 20', pad=(0, 20))]
+                     font='Roboto 30', pad=((0, 0), (120, 20)))]
     ]
 
     wash_complete = [
         [sg.Text(text="Wash cycle complete!",
-                     font='Roboto 20', pad=(0, 20))],
-        [sg.Button("Ok", font='Roboto 15', pad=(5, 20), key='OK3')]
+                     font='Roboto 30', pad=((0, 0), (120, 20)))],
+        [sg.Button("Ok", font='Roboto 20', pad=(5, 20), key='OK3')]
     ]
 
     layout = [[sg.Column(prompt, key='-PROMPT-',
