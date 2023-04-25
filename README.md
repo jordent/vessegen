@@ -8,7 +8,7 @@ This tutorial assumes you are using a Raspberry Pi with the most up to date Rasp
 
 ## **Installation**
 
-To complete installation, an external mouse or keyboard will be needed. Alternatively, you could just ahead to [Additional Touch Screen Optimization](#additional-touch-screen-optimization) to set up the keyboard and right-click functionality if you are using a touch screen and then come back to these steps. To start installation, first clone the git repo.
+To complete installation, an external mouse or keyboard will be needed. Alternatively, you could just ahead to [Additional Touch Screen Optimization](#additional-touch-screen-optimization) to set up the keyboard and right-click functionality if you are using a touch screen and then come back to these steps. To start installation, first clone the git repo. To do this step (and any subsequent steps involving installation) be sure to have opened the terminal on your Raspberry Pi.
 
 ```bash
 sudo apt-get install git
