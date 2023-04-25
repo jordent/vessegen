@@ -11,14 +11,6 @@ ICON_PATH = '/usr/bin/vessegen.png'
 # chamber
 GPIO_PINS = [
     {
-        "add": 3,
-        "remove": 5
-    },
-    {
-        "add": 7,
-        "remove": 8
-    },
-    {
         "add": 10,
         "remove": 12
     },
@@ -41,6 +33,14 @@ GPIO_PINS = [
     {
         "add": 31,
         "remove": 32
+    },
+    {
+        "add": 33,
+        "remove": 35
+    },
+    {
+        "add": 36,
+        "remove": 38
     }
 ]
 
